@@ -29,6 +29,8 @@
         padding: 10px 0;
         border-bottom: 1px solid #2a3a3a;
         margin-bottom: 20px;
+        position: relative;
+        z-index: 10;
       }
 
       .logo {
@@ -47,6 +49,8 @@
         display: flex;
         flex: 1;
         gap: 20px;
+        position: relative;
+        z-index: 10;
       }
 
       .sidebar {
@@ -60,11 +64,12 @@
         margin-bottom: 5px;
         cursor: pointer;
         border-radius: 3px;
-        transition: background-color 0.3s;
+        transition: background-color 0.3s, transform 0.2s;
       }
 
       .menu-item:hover {
         background-color: #1a2a2a;
+        transform: translateX(5px);
       }
 
       .menu-item.active {
@@ -83,6 +88,16 @@
         padding: 20px;
         border-radius: 5px;
         margin-bottom: 20px;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s forwards;
+      }
+
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .welcome-title {
@@ -99,11 +114,25 @@
         padding: 15px;
         overflow-y: auto;
         font-size: 14px;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeIn 0.8s 0.3s forwards;
       }
 
       .terminal-line {
         margin-bottom: 8px;
         line-height: 1.4;
+        opacity: 0;
+        animation: typingEffect 0.5s forwards;
+      }
+
+      @keyframes typingEffect {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
       .prompt {
@@ -151,11 +180,22 @@
         font-size: 18px;
         cursor: pointer;
         transition: all 0.3s;
+        transform: scale(0.9);
+        opacity: 0;
+        animation: cellAppear 0.5s forwards;
+      }
+
+      @keyframes cellAppear {
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
 
       .number-cell:hover {
         background-color: #2a3a3a;
         color: #5dc1b9;
+        transform: scale(1.05);
       }
 
       .footer {
@@ -165,6 +205,8 @@
         color: #4a5a5a;
         padding: 10px 0;
         border-top: 1px solid #2a3a3a;
+        position: relative;
+        z-index: 10;
       }
 
       .hidden {
@@ -198,6 +240,16 @@
         margin-bottom: 10px;
         background-color: #1a2a2a;
         border-radius: 5px;
+        opacity: 0;
+        transform: translateX(-20px);
+        animation: slideIn 0.5s forwards;
+      }
+
+      @keyframes slideIn {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
       }
 
       .message-sender {
@@ -226,6 +278,9 @@
 
       .handbook-section {
         margin-bottom: 20px;
+        opacity: 0;
+        transform: translateY(10px);
+        animation: fadeIn 0.5s forwards;
       }
 
       .handbook-section-title {
@@ -252,9 +307,88 @@
           opacity: 0;
         }
       }
+
+      #three-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        opacity: 0.2;
+        pointer-events: none;
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0a1a1a;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        transition: opacity 1s;
+      }
+
+      .loading-logo {
+        color: #5dc1b9;
+        font-size: 32px;
+        font-weight: bold;
+        letter-spacing: 3px;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.5;
+        }
+      }
+
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #1a2a2a;
+        border-left: 4px solid #5dc1b9;
+        padding: 15px;
+        border-radius: 3px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        z-index: 100;
+        transform: translateX(120%);
+        transition: transform 0.5s;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .notification-title {
+        color: #5dc1b9;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .notification-message {
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-logo">LUMON INDUSTRIES</div>
+    </div>
+
+    <div id="three-container"></div>
+
     <div class="header">
       <div class="logo">LUMON OS</div>
       <div class="status">
@@ -398,8 +532,28 @@
       LUMON INDUSTRIES • SEVERED FLOOR • AUTHORIZED ACCESS ONLY
     </div>
 
+    <div class="notification" id="notification">
+      <div class="notification-title">SYSTEM ALERT</div>
+      <div class="notification-message" id="notification-message"></div>
+    </div>
+
+    <!-- Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
+        // Loading screen
+        setTimeout(() => {
+          const loadingOverlay = document.getElementById("loading-overlay");
+          loadingOverlay.style.opacity = "0";
+          setTimeout(() => {
+            loadingOverlay.style.display = "none";
+          }, 1000);
+        }, 2000);
+
+        // Initialize Three.js
+        initThreeJS();
+
         // Initialize the clock
         updateClock();
         setInterval(updateClock, 1000);
@@ -413,6 +567,7 @@
             const command = terminalInput.value.trim().toLowerCase();
             const outputLine = document.createElement("div");
             outputLine.className = "terminal-line";
+            outputLine.style.animation = "typingEffect 0.3s forwards";
             outputLine.innerHTML = `<span class="prompt">LUMON></span> ${terminalInput.value}`;
             terminalOutput.appendChild(outputLine);
 
@@ -452,10 +607,12 @@
                 if (key === "messages") {
                   document.querySelector(".message-container").style.display =
                     "flex";
+                  animateMessages();
                 }
                 if (key === "handbook") {
                   document.querySelector(".handbook-container").style.display =
                     "flex";
+                  animateHandbook();
                 }
               } else {
                 sections[key].classList.add("hidden");
@@ -472,12 +629,23 @@
               const cell = document.createElement("div");
               cell.className = "number-cell";
               cell.textContent = generateRandomNumber();
+              cell.style.animationDelay = `${i * 0.05}s`;
               cell.addEventListener("click", function () {
                 this.style.backgroundColor = "#5dc1b9";
                 this.style.color = "#0a1a1a";
+                this.style.transform = "scale(1.1) rotate(5deg)";
+
+                // Show notification for selected numbers
+                if (Math.random() > 0.7) {
+                  showNotification("Number identified as scary");
+                } else {
+                  showNotification("Number identified as safe");
+                }
+
                 setTimeout(() => {
                   this.style.backgroundColor = "";
                   this.style.color = "";
+                  this.style.transform = "";
                   this.textContent = generateRandomNumber();
                 }, 500);
               });
@@ -486,17 +654,54 @@
           }
         }
 
+        function animateMessages() {
+          const messages = document.querySelectorAll(".message");
+          messages.forEach((message, index) => {
+            message.style.opacity = "0";
+            message.style.animation = "none";
+            setTimeout(() => {
+              message.style.animation = `slideIn 0.5s ${index * 0.2}s forwards`;
+            }, 10);
+          });
+        }
+
+        function animateHandbook() {
+          const sections = document.querySelectorAll(".handbook-section");
+          sections.forEach((section, index) => {
+            section.style.opacity = "0";
+            section.style.animation = "none";
+            setTimeout(() => {
+              section.style.animation = `fadeIn 0.5s ${index * 0.3}s forwards`;
+            }, 10);
+          });
+        }
+
         function generateRandomNumber() {
           return Math.floor(Math.random() * 900) + 100;
+        }
+
+        function showNotification(message) {
+          const notification = document.getElementById("notification");
+          const notificationMessage = document.getElementById(
+            "notification-message"
+          );
+
+          notificationMessage.textContent = message;
+          notification.classList.add("show");
+
+          setTimeout(() => {
+            notification.classList.remove("show");
+          }, 3000);
         }
 
         function processCommand(command) {
           const response = document.createElement("div");
           response.className = "terminal-line";
+          response.style.animation = "typingEffect 0.5s forwards";
 
           switch (command) {
             case "help":
-              response.innerHTML = `<span class="prompt">SYSTEM:</span> Available commands: help, status, quote, logout, files, security`;
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Available commands: help, status, quote, logout, files, security, kier, whoami, purpose`;
               break;
             case "status":
               response.innerHTML = `<span class="prompt">SYSTEM:</span> All systems operational. Severance protocol active.`;
@@ -515,6 +720,7 @@
               break;
             case "logout":
               response.innerHTML = `<span class="prompt">SYSTEM:</span> <span class="blink">WARNING:</span> Logout request requires supervisor authorization.`;
+              showNotification("Logout request denied");
               break;
             case "files":
               response.innerHTML = `<span class="prompt">SYSTEM:</span> Accessing file system...<br>
@@ -541,6 +747,14 @@
             case "purpose":
               response.innerHTML = `<span class="prompt">SYSTEM:</span> Your purpose is to serve Lumon through the refinement of macrodata. The work is mysterious and important.`;
               break;
+            case "dance":
+            case "music":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Music Dance Experience is a privilege granted to employees who exceed their quotas. Your current status: INELIGIBLE.`;
+              break;
+            case "waffle":
+            case "waffle party":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> The Waffle Party is the highest honor bestowed upon Lumon employees. Continue your excellent work to be considered.`;
+              break;
             default:
               response.innerHTML = `<span class="prompt">SYSTEM:</span> Command not recognized. Type 'help' for available commands.`;
           }
@@ -560,6 +774,106 @@
           document.getElementById(
             "time"
           ).textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        function initThreeJS() {
+          // Create scene
+          const scene = new THREE.Scene();
+
+          // Create camera
+          const camera = new THREE.PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+          );
+          camera.position.z = 5;
+
+          // Create renderer
+          const renderer = new THREE.WebGLRenderer({ alpha: true });
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setClearColor(0x000000, 0);
+          document
+            .getElementById("three-container")
+            .appendChild(renderer.domElement);
+
+          // Create floating particles
+          const particles = new THREE.Group();
+          scene.add(particles);
+
+          for (let i = 0; i < 100; i++) {
+            const geometry = new THREE.SphereGeometry(0.05, 8, 8);
+            const material = new THREE.MeshBasicMaterial({
+              color: 0x5dc1b9,
+              transparent: true,
+              opacity: Math.random() * 0.5,
+            });
+
+            const particle = new THREE.Mesh(geometry, material);
+
+            // Random position
+            particle.position.x = (Math.random() - 0.5) * 20;
+            particle.position.y = (Math.random() - 0.5) * 20;
+            particle.position.z = (Math.random() - 0.5) * 10 - 5;
+
+            // Random movement data
+            particle.userData = {
+              speed: Math.random() * 0.01,
+              direction: new THREE.Vector3(
+                (Math.random() - 0.5) * 0.01,
+                (Math.random() - 0.5) * 0.01,
+                0
+              ),
+            };
+
+            particles.add(particle);
+          }
+
+          // Create a Lumon logo
+          const logoGeometry = new THREE.RingGeometry(1, 1.3, 32);
+          const logoMaterial = new THREE.MeshBasicMaterial({
+            color: 0x5dc1b9,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.2,
+          });
+          const logo = new THREE.Mesh(logoGeometry, logoMaterial);
+          logo.position.z = -8;
+          scene.add(logo);
+
+          // Animation loop
+          function animate() {
+            requestAnimationFrame(animate);
+
+            // Move particles
+            particles.children.forEach((particle) => {
+              particle.position.x += particle.userData.direction.x;
+              particle.position.y += particle.userData.direction.y;
+
+              // Reset position if out of bounds
+              if (Math.abs(particle.position.x) > 10) {
+                particle.position.x = -Math.sign(particle.position.x) * 10;
+              }
+              if (Math.abs(particle.position.y) > 10) {
+                particle.position.y = -Math.sign(particle.position.y) * 10;
+              }
+            });
+
+            // Rotate logo
+            logo.rotation.z += 0.005;
+
+            renderer.render(scene, camera);
+          }
+
+          // Handle window resize
+          window.addEventListener("resize", () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+          });
+
+          // Start animation
+          animate();
         }
       });
     </script>
