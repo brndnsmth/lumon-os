@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LUMON OS</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Courier New", monospace;
+      }
+
+      body {
+        background-color: #0a1a1a;
+        color: #c5d1d1;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow: hidden;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #2a3a3a;
+        margin-bottom: 20px;
+      }
+
+      .logo {
+        font-size: 24px;
+        font-weight: bold;
+        color: #5dc1b9;
+        letter-spacing: 2px;
+      }
+
+      .status {
+        font-size: 14px;
+        color: #5dc1b9;
+      }
+
+      .main-container {
+        display: flex;
+        flex: 1;
+        gap: 20px;
+      }
+
+      .sidebar {
+        width: 200px;
+        border-right: 1px solid #2a3a3a;
+        padding-right: 20px;
+      }
+
+      .menu-item {
+        padding: 10px;
+        margin-bottom: 5px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: background-color 0.3s;
+      }
+
+      .menu-item:hover {
+        background-color: #1a2a2a;
+      }
+
+      .menu-item.active {
+        background-color: #2a3a3a;
+        color: #5dc1b9;
+      }
+
+      .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .welcome-message {
+        background-color: #1a2a2a;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      .welcome-title {
+        color: #5dc1b9;
+        margin-bottom: 10px;
+        font-size: 18px;
+      }
+
+      .terminal {
+        flex: 1;
+        background-color: #0f1f1f;
+        border: 1px solid #2a3a3a;
+        border-radius: 5px;
+        padding: 15px;
+        overflow-y: auto;
+        font-size: 14px;
+      }
+
+      .terminal-line {
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+
+      .prompt {
+        color: #5dc1b9;
+      }
+
+      .input-line {
+        display: flex;
+        margin-top: 10px;
+      }
+
+      .input-prompt {
+        color: #5dc1b9;
+        margin-right: 10px;
+      }
+
+      #terminal-input {
+        background: transparent;
+        border: none;
+        color: #c5d1d1;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        flex: 1;
+        outline: none;
+      }
+
+      .numbers-grid {
+        display: none;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        padding: 20px;
+        background-color: #1a2a2a;
+        border-radius: 5px;
+        height: 100%;
+      }
+
+      .number-cell {
+        background-color: #0f1f1f;
+        border: 1px solid #2a3a3a;
+        border-radius: 3px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 60px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .number-cell:hover {
+        background-color: #2a3a3a;
+        color: #5dc1b9;
+      }
+
+      .footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 12px;
+        color: #4a5a5a;
+        padding: 10px 0;
+        border-top: 1px solid #2a3a3a;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .message-container {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .message-header {
+        padding: 15px;
+        background-color: #1a2a2a;
+        border-radius: 5px 5px 0 0;
+        margin-bottom: 1px;
+      }
+
+      .messages {
+        flex: 1;
+        background-color: #0f1f1f;
+        border: 1px solid #2a3a3a;
+        border-radius: 0 0 5px 5px;
+        padding: 15px;
+        overflow-y: auto;
+      }
+
+      .message {
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #1a2a2a;
+        border-radius: 5px;
+      }
+
+      .message-sender {
+        color: #5dc1b9;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .handbook-container {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+        background-color: #0f1f1f;
+        border: 1px solid #2a3a3a;
+        border-radius: 5px;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .handbook-title {
+        color: #5dc1b9;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 20px;
+      }
+
+      .handbook-section {
+        margin-bottom: 20px;
+      }
+
+      .handbook-section-title {
+        color: #5dc1b9;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+
+      .handbook-text {
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      .blink {
+        animation: blink 1s infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">LUMON OS</div>
+      <div class="status">
+        INNIE SESSION ACTIVE • <span id="time">00:00:00</span>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <div class="sidebar">
+        <div class="menu-item active" data-section="terminal">Terminal</div>
+        <div class="menu-item" data-section="mdr">Macrodata Refinement</div>
+        <div class="menu-item" data-section="messages">Messages</div>
+        <div class="menu-item" data-section="handbook">Employee Handbook</div>
+      </div>
+
+      <div class="content">
+        <div id="terminal-section">
+          <div class="welcome-message">
+            <div class="welcome-title">Welcome, Employee</div>
+            <p>
+              You are now logged into the Lumon Industries Severed Floor System.
+            </p>
+            <p>
+              Please remember that all work is confidential and discussion of
+              work details is strictly prohibited.
+            </p>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-line">
+              <span class="prompt">LUMON></span> System initialized
+            </div>
+            <div class="terminal-line">
+              <span class="prompt">LUMON></span> Security protocols active
+            </div>
+            <div class="terminal-line">
+              <span class="prompt">LUMON></span> Employee session started
+            </div>
+            <div class="terminal-line">
+              <span class="prompt">LUMON></span> Type 'help' for available
+              commands
+            </div>
+            <div id="terminal-output"></div>
+            <div class="input-line">
+              <span class="input-prompt">LUMON></span>
+              <input type="text" id="terminal-input" autofocus />
+            </div>
+          </div>
+        </div>
+
+        <div id="mdr-section" class="hidden">
+          <div class="numbers-grid">
+            <!-- Numbers will be generated by JavaScript -->
+          </div>
+        </div>
+
+        <div id="messages-section" class="hidden">
+          <div class="message-container">
+            <div class="message-header">Authorized Communications</div>
+            <div class="messages">
+              <div class="message">
+                <div class="message-sender">MILCHICK, S.</div>
+                <div class="message-content">
+                  Remember that the quarterly camaraderie recognition dinner is
+                  scheduled for next week. Attendance is mandatory.
+                </div>
+              </div>
+              <div class="message">
+                <div class="message-sender">HARMONY, C.</div>
+                <div class="message-content">
+                  Your work has been satisfactory. Continue to meet quotas and
+                  you may be eligible for a music dance experience.
+                </div>
+              </div>
+              <div class="message">
+                <div class="message-sender">SYSTEM</div>
+                <div class="message-content">
+                  Your wellness check is scheduled for tomorrow at 10:00. Please
+                  be prompt.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="handbook-section" class="hidden">
+          <div class="handbook-container">
+            <div class="handbook-title">LUMON EMPLOYEE HANDBOOK</div>
+
+            <div class="handbook-section">
+              <div class="handbook-section-title">1. INTRODUCTION</div>
+              <p class="handbook-text">
+                Welcome to Lumon Industries. As a severed employee, you have
+                been chosen for your unique abilities and dedication to our
+                mission.
+              </p>
+              <p class="handbook-text">
+                This handbook contains all the information your innie needs to
+                be a productive member of the Lumon family.
+              </p>
+            </div>
+
+            <div class="handbook-section">
+              <div class="handbook-section-title">2. CODE OF CONDUCT</div>
+              <p class="handbook-text">
+                2.1 Employees must remain at their workstations during
+                designated work hours.
+              </p>
+              <p class="handbook-text">
+                2.2 Discussion of the outside world is strictly prohibited.
+              </p>
+              <p class="handbook-text">
+                2.3 Interdepartmental fraternization requires authorization from
+                your department head.
+              </p>
+              <p class="handbook-text">
+                2.4 Questions about the nature of your work should be directed
+                to your supervisor.
+              </p>
+            </div>
+
+            <div class="handbook-section">
+              <div class="handbook-section-title">3. REWARDS</div>
+              <p class="handbook-text">
+                Employees who meet or exceed their quotas may be eligible for
+                rewards, including:
+              </p>
+              <p class="handbook-text">
+                • Finger traps<br />
+                • Caricature portraits<br />
+                • Waffle parties<br />
+                • Music dance experiences
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      LUMON INDUSTRIES • SEVERED FLOOR • AUTHORIZED ACCESS ONLY
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Initialize the clock
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Terminal functionality
+        const terminalInput = document.getElementById("terminal-input");
+        const terminalOutput = document.getElementById("terminal-output");
+
+        terminalInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            const command = terminalInput.value.trim().toLowerCase();
+            const outputLine = document.createElement("div");
+            outputLine.className = "terminal-line";
+            outputLine.innerHTML = `<span class="prompt">LUMON></span> ${terminalInput.value}`;
+            terminalOutput.appendChild(outputLine);
+
+            // Process command
+            processCommand(command);
+
+            terminalInput.value = "";
+          }
+        });
+
+        // Menu navigation
+        const menuItems = document.querySelectorAll(".menu-item");
+        const sections = {
+          terminal: document.getElementById("terminal-section"),
+          mdr: document.getElementById("mdr-section"),
+          messages: document.getElementById("messages-section"),
+          handbook: document.getElementById("handbook-section"),
+        };
+
+        menuItems.forEach((item) => {
+          item.addEventListener("click", function () {
+            const sectionName = this.getAttribute("data-section");
+
+            // Update active menu item
+            menuItems.forEach((mi) => mi.classList.remove("active"));
+            this.classList.add("active");
+
+            // Show selected section, hide others
+            Object.keys(sections).forEach((key) => {
+              if (key === sectionName) {
+                sections[key].classList.remove("hidden");
+                if (key === "mdr") {
+                  initializeMDR();
+                  document.querySelector(".numbers-grid").style.display =
+                    "grid";
+                }
+                if (key === "messages") {
+                  document.querySelector(".message-container").style.display =
+                    "flex";
+                }
+                if (key === "handbook") {
+                  document.querySelector(".handbook-container").style.display =
+                    "flex";
+                }
+              } else {
+                sections[key].classList.add("hidden");
+              }
+            });
+          });
+        });
+
+        // Initialize MDR grid
+        function initializeMDR() {
+          const grid = document.querySelector(".numbers-grid");
+          if (grid.children.length === 0) {
+            for (let i = 0; i < 25; i++) {
+              const cell = document.createElement("div");
+              cell.className = "number-cell";
+              cell.textContent = generateRandomNumber();
+              cell.addEventListener("click", function () {
+                this.style.backgroundColor = "#5dc1b9";
+                this.style.color = "#0a1a1a";
+                setTimeout(() => {
+                  this.style.backgroundColor = "";
+                  this.style.color = "";
+                  this.textContent = generateRandomNumber();
+                }, 500);
+              });
+              grid.appendChild(cell);
+            }
+          }
+        }
+
+        function generateRandomNumber() {
+          return Math.floor(Math.random() * 900) + 100;
+        }
+
+        function processCommand(command) {
+          const response = document.createElement("div");
+          response.className = "terminal-line";
+
+          switch (command) {
+            case "help":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Available commands: help, status, quote, logout, files, security`;
+              break;
+            case "status":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> All systems operational. Severance protocol active.`;
+              break;
+              const quotes = [
+                "The work is mysterious and important.",
+                "A handshake is available upon request.",
+                "Praise Kier, for he is your founder.",
+                "Remember, the coveted waffle party can be yours.",
+                "Through diligence and compliance, we achieve perfection.",
+              ];
+              const randomQuote =
+                quotes[Math.floor(Math.random() * quotes.length)];
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> "${randomQuote}"`;
+              break;
+            case "logout":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> <span class="blink">WARNING:</span> Logout request requires supervisor authorization.`;
+              break;
+            case "files":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Accessing file system...<br>
+              &nbsp;&nbsp;/home/employee/documents (RESTRICTED)<br>
+              &nbsp;&nbsp;/system/mdr (AUTHORIZED)<br>
+              &nbsp;&nbsp;/messages (AUTHORIZED)<br>
+              &nbsp;&nbsp;/handbook (AUTHORIZED)`;
+              break;
+            case "security":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Security protocols active. Severed floor access restricted. Elevator privileges: STANDARD.`;
+              break;
+            case "kier":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> "The remembered man does not decay." - Kier Eagan`;
+              break;
+            case "hello":
+            case "hi":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Hello, employee. How may I assist with your authorized tasks today?`;
+              break;
+            case "who am i":
+            case "whoami":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> You are employee #4673. Department: Macrodata Refinement. Severance status: ACTIVE.`;
+              break;
+            case "what is my purpose":
+            case "purpose":
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Your purpose is to serve Lumon through the refinement of macrodata. The work is mysterious and important.`;
+              break;
+            default:
+              response.innerHTML = `<span class="prompt">SYSTEM:</span> Command not recognized. Type 'help' for available commands.`;
+          }
+
+          terminalOutput.appendChild(response);
+
+          // Auto-scroll to bottom
+          const terminal = document.querySelector(".terminal");
+          terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateClock() {
+          const now = new Date();
+          const hours = String(now.getHours()).padStart(2, "0");
+          const minutes = String(now.getMinutes()).padStart(2, "0");
+          const seconds = String(now.getSeconds()).padStart(2, "0");
+          document.getElementById(
+            "time"
+          ).textContent = `${hours}:${minutes}:${seconds}`;
+        }
+      });
+    </script>
+  </body>
+</html>
